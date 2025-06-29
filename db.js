@@ -1,11 +1,30 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const ObjectId = Schema.ObjectId;
+const ObjectId = Schema.Types.ObjectId;
 
-const User = new Schema({});
-const Course = new Schema({});
-const Admin = new Schema({});
-const Purchase = new Schema({});
+const User = new Schema({
+  email: { type: String, unique: true },
+  password: String,
+  firstName: String,
+  lastName: String,
+});
+const Course = new Schema({
+  title: String,
+  description: String,
+  price: Number,
+  imageUrl: String,
+  creatorId: ObjectId,
+});
+const Admin = new Schema({
+  email: { type: String, unique: true },
+  password: String,
+  firstName: String,
+  lastName: String,
+});
+const Purchase = new Schema({
+  userId: ObjectId,
+  courseId: ObjectId,
+});
 
 const UserModel = mongoose.model("users", User);
 const CourseModel = mongoose.model("courses", Course);
