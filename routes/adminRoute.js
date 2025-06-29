@@ -3,7 +3,8 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const express = require("express");
 const router = express.Router();
-const { AdminModel } = require("../db");
+const { AdminModel, CourseModel } = require("../db");
+const { adminMiddleware } = require("../middleware/admin");
 const JWT_ADMIN_SECRET = process.env.JWT_ADMIN_SECRET;
 router.use(express.json());
 
@@ -54,19 +55,76 @@ router.post("/login", async function (req, res) {
   }
 });
 
-router.post("/course", (req, res) => {
-  res.json({
-    message: "admin course creation endpoint",
-  });
+router.post("/course", adminMiddleware, async function (req, res) {
+  const adminId = req.adminId;
+  const { title, description, price, imageUrl } = req.body;
+  try {
+    const course = await CourseModel.create({
+      title,
+      description,
+      price,
+      imageUrl,
+      creatorId: adminId,
+    });
+    res.status(200).json({
+      message: "course created",
+      creatorId: course.creatorId,
+    });
+  } catch (e) {
+    res.status(500).json({
+      message: `server error: ${e.message}`,
+    });
+  }
 });
-router.put("/course", (req, res) => {
-  res.json({
-    message: "admin course change endpoint",
-  });
+
+router.put("/course", adminMiddleware, async function (req, res) {
+  const adminId = req.adminId;
+  const { courseId, ...newCourse } = req.body;
+  try {
+    const course = await CourseModel.findOne({
+      _id: courseId,
+      creatorId: adminId,
+    });
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    const updates = {};
+    let isChanged = false;
+
+    for (const key in newCourse) {
+      if (newCourse[key] != course[key]) {
+        updates[key] = newCourse[key];
+        isChanged = true;
+      }
+    }
+
+    if (!isChanged) {
+      return res.json({ message: "No changes detected" });
+    }
+
+    await CourseModel.updateOne({ _id: course._id }, { $set: updates });
+
+    res.json({ message: "course updated", updatedFields: updates });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
 });
-router.get("/course/bulk", (req, res) => {
+
+router.get("/course/bulk", adminMiddleware, async function (req, res) {
+  const adminId = req.adminId;
+  const courses = await CourseModel.find({
+    creatorId: adminId,
+  });
+  if (!courses) {
+    return res.json({
+      message: "no courses created till now",
+    });
+  }
+
   res.json({
-    message: "admin all created courses course endpoint",
+    message: "all courses",
+    courses,
   });
 });
 

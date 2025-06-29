@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
+const { userMiddleware } = require("../middleware/user");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const router = express.Router();
@@ -55,7 +56,7 @@ router.post("/login", async function (req, res) {
   }
 });
 
-router.post("/purchases", (req, res) => {
+router.post("/purchases", userMiddleware, (req, res) => {
   res.json({
     message: "purchased courses",
   });
