@@ -5,7 +5,7 @@ const { userMiddleware } = require("../middleware/user");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const router = express.Router();
-const { UserModel } = require("../db");
+const { UserModel, PurchaseModel } = require("../db");
 router.use(express.json());
 const JWT_USER_SECRET = process.env.JWT_USER_SECRET;
 
@@ -56,9 +56,17 @@ router.post("/login", async function (req, res) {
   }
 });
 
-router.post("/purchases", userMiddleware, (req, res) => {
+router.get("/purchases", userMiddleware, async function (req, res) {
+  const userId = req.userId;
+  // console.log(userId);
+  const purchases = await PurchaseModel.find({
+    userId,
+  })
+    .populate("userId")
+    .populate("courseId");
+
   res.json({
-    message: "purchased courses",
+    purchases,
   });
 });
 

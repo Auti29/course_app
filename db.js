@@ -22,8 +22,8 @@ const Admin = new Schema({
   lastName: String,
 });
 const Purchase = new Schema({
-  userId: ObjectId,
-  courseId: ObjectId,
+  userId: { type: ObjectId, ref: "users" },
+  courseId: { type: ObjectId, ref: "courses" },
 });
 
 const UserModel = mongoose.model("users", User);
